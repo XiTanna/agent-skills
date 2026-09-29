@@ -1,0 +1,8 @@
+{
+  "name": "matlab",
+  "version": "0.1.0",
+  "description": "MATLAB skills: publication-quality, consistent scientific figures (sizing, color system, label typography, legends, insets).",
+  "author": {
+    "name": "Xi Tan"
+  }
+}

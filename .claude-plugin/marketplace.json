@@ -1,0 +1,13 @@
+{
+  "name": "xitan-agent-skills",
+  "owner": {
+    "name": "Xi Tan"
+  },
+  "plugins": [
+    {
+      "name": "matlab",
+      "source": "./matlab",
+      "description": "MATLAB skills: publication-quality, consistent scientific figures (sizing, color system, label typography, legends, insets)."
+    }
+  ]
+}
