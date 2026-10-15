@@ -1,6 +1,6 @@
 ---
 name: matlab-publication-figures
-description: House style and design method for publication-quality scientific figures in MATLAB — fixed canvas/axes sizing, a muted color system with defined roles, typographically correct axis labels (italic quantities, upright units), legend and inset layout, and strict consistency across every figure of a paper. Generated scripts are self-contained. Use this skill whenever the user asks to write, modify, restyle or tidy up a MATLAB plotting script (.m) for research data — line plots, profiles, spectra, time series, parity/correlation plots, series over a parameter or composition, experiment vs simulation comparisons — or asks to make figures consistent, nicer, or match earlier figures, even if they don't mention style explicitly (in any language).
+description: House style and design method for publication-quality scientific figures in MATLAB — fixed canvas/axes sizing, a muted color system with defined roles, typographically correct axis labels (italic quantities, upright units), legend and inset layout, page-wide multi-panel grids, sparse-parameter column profiles and categorical grids, and strict consistency across every figure of a paper. Generated scripts are self-contained. Use this skill whenever the user asks to write, modify, restyle or tidy up a MATLAB plotting script (.m) for research data — line plots, profiles, spectra, time series, parity/correlation plots, series over a parameter or composition, experiment vs simulation comparisons — or asks to make figures consistent, nicer, or match earlier figures, even if they don't mention style explicitly (in any language).
 ---
 
 # MATLAB publication figures
@@ -12,6 +12,9 @@ Read this whole file before writing code. Code building blocks for recurring fig
 ## 0. Working rules
 
 - **Write the .m file; don't run MATLAB and don't export figures** (no `exportgraphics`, `saveas`, `print`, `export_fig`) unless asked. The user runs the script, looks at the result and comes back with screenshots and corrections.
+- **When the user allows running MATLAB** ("run it and tune until it looks good"): run in batch mode through a small wrapper outside the project that `cd`s to the data, runs the script and `print`s PNG previews to a temporary folder — never into the project. Look at every preview (all figures of the set, not only the first), check overlaps, clipping and empty space, iterate, and only then report. Measure blank margins on the PNG instead of guessing.
+- Give every figure a descriptive window name (`figure('Name','Fig. 3 profiles vs C: A, B, C', ...)`) so the user can tell the windows apart.
+- **Never change data to make a plot look better.** If the user decides that a feature is an artifact (e.g. present in only one of several independent runs), check that first and report the evidence; then implement it as one explicit, commented setting near the top (which data, which range, why) that prints a note when applied — raw files untouched, easy to undo.
 - Inspect the data first (header lines, columns, value ranges) with shell/python, and choose limits and ticks from real numbers. Mention what you found in the reply (e.g. "peak is 0.81 at x = 45, so ylim [0 0.9]").
 - **Locate table columns by header text, not by index** — tables grow new columns. Use a distinctive substring and make sure it matches exactly one column (a short key like `'big'` may also match `'big-corrected'`).
 - One figure = one self-contained block (`figure; hold on; … set(gca,…)`) rather than a plotting function, so each figure's limits can be tuned separately. Put the knobs the user will tune (`x_lim`, `offset`, `band`, colors, number of plotted points) as named variables at the top.
@@ -41,13 +44,25 @@ axPos = [3.5 3.4 8 6];  % cm; after plotting:
 - Only exception: very long y tick labels (5–6 digit numbers) → left margin 4.5 cm.
 - If a legend or labels go outside the axes, enlarge the figure window (last element of `Position`); never shrink the axes. Keep `axPos(2)+axPos(4)` below the figure height.
 
+### 1.1 Multi-panel page figures
+
+Panels that form one page-wide figure (rows × columns of small axes) follow a different rule: **the figure, not the axes, has a fixed size**.
+
+- Figure width = 2 × the journal text width (6.5 in → `figW = 2*6.5*2.54` = 33.02 cm), so pasted at 50 % it fills the text width exactly and 22 pt prints as 11 pt. Derive the panel width from it: `pw = (figW - leftMargin - (nCol-1)*gap - rightMargin)/nCol`; never fix `pw` and let the width float.
+- Place every axes in cm (`axes('Units','centimeters','Position',…)`); keep the knobs (`pw`, `ph`, gaps, margins, label column width) together at the top.
+- **Trim the margins to the content**: render once, measure the blank border of the PNG (left/right/top/bottom) and shrink the margins until ~0.1 cm remains. Unused margins are why a "6.5 in" figure looks too small on the page.
+- Keep the figure height below ~25 cm, otherwise MATLAB clips it on screen; split a group across two figures (main text / SI) instead.
+- Column titles (one per column, e.g. the system name) are allowed here: **normal weight, `FontSize` sizeoffont — never bold**, identical in every figure of the paper.
+- Shared x label: only on the bottom row (tick labels of upper rows off); shared y label: only on the first column.
+
 ## 2. Typography of labels
 
 Follow SI/IUPAC conventions:
 
 - **Quantity symbols italic**: `{\itx}`, `{\itt}`, `{\itr}`, `{\itC}`, `{\itE}`, `{\itF}`, `{\it\lambda}`, `{\it\DeltaA}`; for functions write `{\itg}({\itr})` (parentheses upright, not `{\itg(r)}`).
 - **Upright**: units, chemical/material names, descriptive subscripts (`{\itE}_{ref}`, `{\itE}_{model}`), numbers.
-- Always **`Quantity (unit)`**: `'{\itt} (ps)'`, `'{\itC} (mol/L)'`, `'{\itE} (eV/atom)'`, `'{\itF} (eV/Å)'`. Units in parentheses are never italic.
+- Always **`Quantity (unit)`**: `'{\itt} (ps)'`, `'{\itC} (M)'`, `'{\itE} (eV/atom)'`, `'{\itF} (eV/Å)'`. Units in parentheses are never italic. Use one unit spelling for the whole paper (e.g. M rather than mol/L) and change it in every script at once.
+- Notation in legends and row labels is parallel: if one entry reads `'X (q_1)'`, the others read `'Y (q_2)'`, `'Z (q_2)'`, in a fixed logical order kept across figures. A row label holding two numbers (`a/b`) names both quantities (`'q_a/q_b'`), and the numbers take the colors of their categories.
 - **Large magnitudes**: move the power of ten into the unit — `'{\rho} (10^{3} kg m^{-3})'` with data divided by 1e3. Don't use offsets ("E + 59490") or invented Δ-quantities just to shorten ticks. If numbers are intrinsically long, keep integer ticks (`ytickformat('%.0f')`, `ax.YAxis.Exponent = 0`) and widen the left margin.
 - Ratio/composition axes: short ticks (`8:0 6:2 4:4 2:6 0:8`), label like `'A : B (n:n)'` (generic `'sol_1 : sol_2 (n:n)'` when several systems share the axis), `xtickangle(0)`. Long tick strings get auto-rotated — shorten them instead.
 - Charges/superscripts via TeX: `'X^+'`, `'Y^-'`.
@@ -114,15 +129,24 @@ When a figure needs categories that have no established color, stay within the f
 - Legend above the axes: position it manually right on top of the axes (units cm, gap ~0.1 cm), re-set the axes position afterwards, and enlarge the figure height.
 - Text labels next to curves are black and unobtrusive; offer to drop them if the user annotates in slides.
 
-## 6. Insets / zoom-in figures
+## 6. Sparse parameters, grids and annotations
+
+- **Don't interpolate along a sparsely sampled parameter** (a few concentrations, sizes, temperatures): it pretends to know how the data behave in between. Put the samples on an equally spaced categorical axis labelled with the real values (`xticks(1:n); xticklabels(compose('%.1f',v))`), and show each sample as a column — a heat-map column, or a profile drawn inside its column (`references/templates.md` §10).
+- **Profiles in columns read like spectra**: in one row, all columns share one full scale (the maximum of that quantity over the whole row), so widths compare across columns and panels; the baseline sits exactly on the category tick. State the full scale once per row, outside the panels and aligned with the other rows (`'quantity (unit)'` / `'max = 13.1'`) — not a floating mini-axis or scale bar.
+- **Mark a feature that shifts** (first peak, onset, threshold) with a thin dark-gray dotted line (`':'`, gray 0.3, width ~2) from the column baseline to the next column, only on the columns that matter (e.g. first and last), with its value (`'%.1f unit'`) right-aligned **below** the line end so it never covers the data.
+- **Categorical grids** (rows = categories, columns = samples): side strip coloured by group, darker within a group as a count grows; bold the largest value of each column; white text only on dark cells; empty cells light gray; color bar below the first column; summary rows under a thicker white separator; a value that is the same in every column is written once, centred, with no column borders through it.
+- **Comparing each cell with a per-column threshold**: put two small markers in the cell on a shared axis — one for the threshold, one for the value (shape and color by category, dark edge ~1.3) — and let their left/right order carry the comparison. No connecting lines or arrows; they clutter. Keep the cell number above the markers.
+- **Text never overlaps data or other text**: leave a gap in cm (`gap*diff(xlim)/axW`), use a white `BackgroundColor` only where it hides nothing meaningful, keep ticks off panel edges, and check every panel of every figure.
+
+## 7. Insets / zoom-in figures
 
 Draw zoom-ins as separate figures the user will shrink into an inset: no axis labels, no legend, ticks only, larger font (`sizeoffont+8`) so ticks survive down-scaling, same axes box and styles as the parent, zoom window as a named variable.
 
-## 7. Recurring figure types → `references/templates.md`
+## 8. Recurring figure types → `references/templates.md`
 
-Two-series comparison · parity plot with tolerance band · offset (waterfall) stacking with real-value ticks · category-to-category gradient series · two reference scales on left/right axes · two-group legend · zoom-in inset.
+Two-series comparison · parity plot with tolerance band · offset (waterfall) stacking with real-value ticks · category-to-category gradient series · two reference scales on left/right axes · two-group legend · zoom-in inset · page-wide panel grid · spectra-style column profiles · categorical grid with side strip and threshold markers.
 
-## 8. Consistency checklist (before handing over)
+## 9. Consistency checklist (before handing over)
 
 1. configPlot call, `axPos`, font, line width, marker size identical to the sibling scripts; `configPlot` appended once at the end.
 2. Same entity → same color and line style as in every other figure; approximations dashed.
@@ -131,6 +155,7 @@ Two-series comparison · parity plot with tolerance band · offset (waterfall) s
 5. Legend font/placement match the siblings; legend only where agreed.
 6. Shared axes (ratios, parameters) run in the same direction and use the same naming in every figure — flag mismatches.
 7. Data read by header text; ranges checked; limits don't silently clip data (report what falls outside).
-8. No titles, no file export, no transparent axes, no unused variables.
+8. No titles (column titles of panel grids: normal weight), no file export, no transparent axes, no unused variables.
+9. Page-wide figures: width = 2 × text width, blank border ≤ ~0.1 cm, height fits the screen; no interpolation along sparse parameters; no text over data.
 
 In the reply, summarize the change per figure, list the knobs to tune, and briefly flag anything that needs the user's decision.

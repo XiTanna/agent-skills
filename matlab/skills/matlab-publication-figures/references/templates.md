@@ -13,6 +13,9 @@ Contents
 6. Two reference scales on left/right y axes
 7. Two-group legend
 8. Zoom-in / inset figure
+9. Page-wide panel grid
+10. Spectra-style column profiles (sparse parameter, shared full scale)
+11. Categorical grid with side strip, summary rows and threshold markers
 
 ---
 
@@ -178,3 +181,79 @@ end
 set(gca,'unit','centimeter','position',axPos,'fontsize',font_zoom);
 box on; xlim(x_lim_zoom)          % no xlabel / ylabel / legend
 ```
+
+## 9. Page-wide panel grid
+
+```matlab
+figW = 2*6.5*2.54;                    % 2 x text width (6.5 in); pasted at 50 %
+x0 = 2.2; y0 = 2.3; gx = 0.6; gy = 0.5; labR = 3.9;   % margins trimmed to the content
+nCol = 3; nRow = 3; ph = 4.2;
+pw = (figW - x0 - (nCol-1)*gx - 0.4 - labR)/nCol;     % panel width follows the page width
+figH = y0 + nRow*ph + (nRow-1)*gy + 1.1;              % keep below ~25 cm
+figure('Name','Fig. N: panel grid','Position',[2 2 figW figH]);
+for r = 1:nRow
+    for k = 1:nCol
+        ax = axes('Units','centimeters','Position',[x0+(k-1)*(pw+gx), y0+(nRow-r)*(ph+gy), pw, ph]);
+        hold on; box on; set(ax,'FontSize',sizeoffont,'LineWidth',1.2,'Layer','top');
+        % ... plot ...
+        if r == 1, title(colName{k},'FontSize',sizeoffont,'FontWeight','normal'); end
+        if r < nRow, xticklabels([]); else, xlabel('{\itC} (M)'); end
+        if k == 1, ylabel('{\itz} (Å)'); else, yticklabels([]); end
+    end
+end
+```
+Render once, measure the blank border of the PNG and adjust `x0`, `y0`, `labR` and the top margin
+until about 0.1 cm is left on every side.
+
+## 10. Spectra-style column profiles (sparse parameter, shared full scale)
+
+One column per sampled parameter value; the profile of that sample is drawn to the right of its
+baseline. In a row, every column and panel uses the same full scale `rmax`.
+
+```matlab
+xl   = @(n) [0.85, n + 0.9];                         % first baseline close to the left frame
+wmin = pw/diff(xl(nMax));                            % cm, narrowest column of the figure
+rmax = max(cellfun(@(R) max(R,[],'all'), rowData));  % full scale of the row
+f = 0.84*wmin/(pw/diff(xl(n)));                      % same cm per unit in every panel of the row
+for j = 1:n
+    x = j + f*R(:,j)/rmax;
+    fill([j; x; j], [z(1); z; z(end)], col, 'FaceAlpha',0.35, 'EdgeColor','none');
+    plot(x, z, '-', 'Color',col, 'LineWidth',1.5);
+    plot([j j], z_lim, '-', 'Color',0.7*[1 1 1], 'LineWidth',0.8);    % baseline on the tick
+end
+xlim(xl(n)); xticks(1:n); xticklabels(compose('%.1f',v)); xtickangle(0)
+% feature position (e.g. first peak) on selected columns: dotted to the next column, value below
+xe = min(j + 1, max(xl(n)));
+plot([j xe], zp*[1 1], ':', 'Color',0.3*[1 1 1], 'LineWidth',2.2);
+text(xe - 0.04, zp, sprintf('%.1f Å', zp), 'Color',0.3*[1 1 1], 'FontSize',sizeoffont-8, ...
+    'HorizontalAlignment','right', 'VerticalAlignment','top');
+% full scale, once per row, outside and aligned with the other rows
+annotation('textbox','Units','centimeters','Position',[x0+nCol*pw+(nCol-1)*gx+0.4, axB, labR, ph], ...
+    'String',{'{\it\rho} (unit)', sprintf('{\it\rho}_{max} = %.1f', rmax)}, 'Color',col*0.85, ...
+    'EdgeColor','none','VerticalAlignment','middle','FontSize',sizeoffont-4,'Margin',0);
+```
+First-feature finder: first local maximum above ~10 % of the profile maximum (weak but real first
+layers count); print the positions with `fprintf`.
+
+## 11. Categorical grid with side strip, summary rows and threshold markers
+
+```matlab
+% cells: rectangle per (row r, column i); value text in the upper half, markers in the lower half
+rectangle('Position',[i-0.5, r-0.5, 1, 1], 'FaceColor',cellColor, 'EdgeColor','none');
+text(i, r-0.24, sprintf('%.2f', V(r,i)), 'HorizontalAlignment','center', 'FontSize',sizeoffont-10);
+gx_of = @(i,u) i - 0.5 + 0.14 + (u - u_lo)/(u_hi - u_lo)*0.72;    % shared value axis inside the cells
+plot(gx_of(i,T(i)), r+0.18, 'o', 'MarkerFaceColor',cThr, 'MarkerEdgeColor',cEdge, 'LineWidth',1.3, 'MarkerSize',6.5);
+plot(gx_of(i,V(r,i)), r+0.18, mk(r), 'MarkerFaceColor',cCat(r,:), 'MarkerEdgeColor',cEdge, 'LineWidth',1.3, 'MarkerSize',6.5);
+% side strip: group color, darker with a larger count inside the group
+t  = (cnt(r) - min(cnt))/max(max(cnt) - min(cnt), 1);
+cg = interp1([0 0.5 1], [0.45*cBase + 0.55; cBase; 0.70*cBase], t);
+annotation('rectangle','Units','centimeters','Position',[axX-0.33, axB+(nr-r)*cellH+0.04, 0.25, cellH-0.08], ...
+    'FaceColor',cg,'EdgeColor','none');
+% white cell borders, thicker above the summary rows; no column borders through a row written once
+plot([0.5 nc+0.5], [nk nk]+0.5, 'w-', 'LineWidth',4);
+text((nc+1)/2, nk+2, sprintf('%.2f', constValue), 'HorizontalAlignment','center', 'FontWeight','bold');
+% two numbers in one cell, colored by category: 'a/b'
+two = @(a,b) sprintf('\color[rgb]{%.3f %.3f %.3f}%.0f\color[rgb]{0.4 0.4 0.4}/\color[rgb]{%.3f %.3f %.3f}%.0f', cA, a, cB, b);
+```
+Color bar below the first column; legend of the markers in one row under it, centred on the color bar
+by measuring its text extent.

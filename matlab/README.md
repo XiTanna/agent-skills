@@ -6,7 +6,7 @@ MATLAB skills for Claude Code.
 
 ### matlab-publication-figures
 
-Consistent, publication-quality MATLAB figures: canvas and axes sizing, color system, label typography, legends, insets, and a cross-figure consistency checklist. Generated scripts are self-contained (plot defaults are appended as a local function).
+Consistent, publication-quality MATLAB figures: canvas and axes sizing, page-wide multi-panel layouts, color system, label typography, legends, insets, column profiles and categorical grids, and a cross-figure consistency checklist. Generated scripts are self-contained (plot defaults are appended as a local function).
 
 ## Install
 
