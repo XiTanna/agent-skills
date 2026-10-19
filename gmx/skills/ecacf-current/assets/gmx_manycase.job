@@ -1,0 +1,17 @@
+#!/bin/bash
+#SBATCH --job-name=JOBNAME
+#SBATCH -A ACCOUNT
+#SBATCH -p PARTITION
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=8
+#SBATCH --mem=40g
+#SBATCH --time=3:00:00
+#SBATCH --gres=gpu:1
+
+# >>> environment: filled in from $GMX_SETUP (loads a plain GROMACS)
+#GMX_ENV_SETUP#
+
+ncores=8
+name1=npt1
+gmx grompp -f grompp.mdp -p topol.top -c npt.gro -o $name1 -n index.ndx -maxwarn 3
+gmx mdrun -s $name1 -deffnm $name1 -v -ntmpi 1 -ntomp $ncores -cpi -pme gpu -nb gpu -pmefft gpu -pinoffset 1 -tunepme no

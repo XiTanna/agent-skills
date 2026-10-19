@@ -12,7 +12,7 @@
     {
       "name": "gmx",
       "source": "./gmx",
-      "description": "GROMACS skills: bulk electrolyte case builder (molar ratio to counts, packmol, minimisation, NPT submission)."
+      "description": "GROMACS skills: bulk electrolyte case builder (molar ratio to counts, packmol, minimisation, NPT submission) and charge-current (ECACF) data workflow for conductivity."
     }
   ]
 }

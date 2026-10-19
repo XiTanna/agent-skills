@@ -1,7 +1,7 @@
 {
   "name": "gmx",
   "version": "0.1.0",
-  "description": "GROMACS skills: bulk electrolyte case builder (molar ratio to counts, packmol, minimisation, NPT submission).",
+  "description": "GROMACS skills: bulk electrolyte case builder (molar ratio to counts, packmol, minimisation, NPT submission) and charge-current (ECACF) data workflow for conductivity.",
   "author": {
     "name": "Xi Tan"
   }

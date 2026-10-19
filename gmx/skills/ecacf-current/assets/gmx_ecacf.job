@@ -1,0 +1,28 @@
+#!/bin/bash
+#SBATCH --job-name=JOBNAME
+#SBATCH -A ACCOUNT
+#SBATCH -p PARTITION
+#CONSTRAINT#
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=3
+#SBATCH --mem=8g
+#SBATCH --time=5:00:00
+
+# >>> environment: filled in from $ONFLY_SETUP (puts the on-the-fly gmx first on PATH)
+#GMX_ENV_SETUP#
+
+ncores=3
+name1=nvt
+
+rm -rf onfly_ecacf.dat
+rm -rf nvt.*
+
+read Lx Ly Lz < <(tail -n 1 start.gro)
+echo "Detected box size: Lx=$Lx  Ly=$Ly  Lz=$Lz"
+
+gmx grompp -f grompp.mdp -p topol.top -c start.gro -o $name1 -n index.ndx -maxwarn 3
+
+# one bin over the whole box (-nbin 1, -dim 2): every output line is the total current of the selected groups
+export ONFLY_ECACF="-low [0,0,0] -up [$Lx,$Ly,$Lz] -nbin 1 -dim 2 -n index.ndx -sel [#SEL#] -o onfly_ecacf.dat"
+
+gmx mdrun -s $name1 -deffnm $name1 -v -ntmpi 1 -ntomp $ncores
