@@ -8,6 +8,11 @@
       "name": "matlab",
       "source": "./matlab",
       "description": "MATLAB skills: publication-quality, consistent scientific figures (sizing, color system, label typography, legends, insets)."
+    },
+    {
+      "name": "gmx",
+      "source": "./gmx",
+      "description": "GROMACS skills: bulk electrolyte case builder (molar ratio to counts, packmol, minimisation, NPT submission)."
     }
   ]
 }

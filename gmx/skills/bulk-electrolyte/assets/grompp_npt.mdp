@@ -1,0 +1,52 @@
+; NPT equilibration of a bulk electrolyte box (T / ref_t / gen_temp are set by bulk_electrolyte.sh submit)
+title                    = bulk electrolyte NPT
+constraints              = h-bonds
+integrator               = md
+dt                       = 0.002
+nsteps                   = 7500000      ; 15 ns
+nstcomm                  = 1
+nstxout                  = 0
+nstxtcout                = 1000
+nstvout                  = 0
+nstfout                  = 0
+nstlog                   = 1000
+nstenergy                = 100
+nstlist                  = 1
+
+; velocity generation (off: velocities come from the input structure)
+gen_vel                  = no
+gen_temp                 = 298
+gen_seed                 = 173529
+
+; electrostatics and van der Waals
+cutoff-scheme            = Verlet
+coulombtype              = PME
+rlist                    = 0.7
+rcoulomb                 = 0.7
+vdwtype                  = Cut-off
+rvdw                     = 0.7
+fourierspacing           = 0.1
+pme_order                = 4
+ewald_rtol               = 1e-5
+ewald_geometry           = 3d
+DispCorr                 = EnerPres
+
+; temperature coupling
+Tcoupl                   = nose-hoover
+tc-grps                  = system
+tau_t                    = 2
+ref_t                    = 298
+
+; pressure coupling
+Pcoupl                   = Parrinello-Rahman
+Pcoupltype               = isotropic
+tau_p                    = 10
+compressibility          = 4.5e-5
+ref_p                    = 1
+lincs-iter               = 6
+
+; optional simulated annealing (disabled)
+;annealing               = system
+;annealing_npoints       = 2
+;annealing-temp          = 600 400
+;annealing-time          = 0 300

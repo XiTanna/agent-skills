@@ -1,0 +1,43 @@
+; steepest-descent minimisation of the packed box
+title                    = bulk electrolyte minimisation
+constraints              = h-bonds
+integrator               = steep
+dt                       = 0.002
+emtol                    = 500          ; kJ mol-1 nm-1
+nsteps                   = 5000
+nstcomm                  = 0
+nstxout                  = 10000
+nstvout                  = 0
+nstfout                  = 0
+nstlog                   = 1000
+nstcalcenergy            = 1
+nstenergy                = 10000
+nstxout-compressed       = 500
+
+cutoff-scheme            = Verlet
+ns-type                  = grid
+nstlist                  = 20
+
+; electrostatics and van der Waals (cut-offs in nm)
+coulombtype              = PME
+vdwtype                  = Cut-off
+rvdw                     = 0.7
+rlist                    = 0.7
+rcoulomb                 = 0.7
+fourierspacing           = 0.12
+pme_order                = 4
+ewald_rtol               = 1e-5
+DispCorr                 = EnerPres
+ewald_geometry           = 3d
+
+; no thermostat / barostat during minimisation
+Tcoupl                   = no
+tc-grps                  = system
+tau_t                    = -1
+ref-t                    = 298
+nhchainlength            = 1
+Pcoupl                   = no
+Pcoupltype               = isotropic
+tau_p                    = 1.0
+compressibility          = 4.5e-5
+ref_p                    = 1
